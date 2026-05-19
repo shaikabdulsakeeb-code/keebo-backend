@@ -7,18 +7,18 @@ dotenv.config({ override: true });
 // Connect to database
 const startServer = async () => {
   await connectDB();
-  
+
   // Import the configured express app
   const app = require('./app');
 
   // Create HTTP server
   const server = http.createServer(app);
-  
+
   // Set up Socket.io
   const { Server } = require('socket.io');
   const io = new Server(server, {
     cors: {
-      origin: '*', // You can restrict this in production
+      origin: 'https://mykeebo.netlify.app', // You can restrict this in production
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
     }
   });
