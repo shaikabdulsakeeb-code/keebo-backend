@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: keebo-backend
+    env: node
+    plan: free
+    # If the backend is inside a subdirectory of your Git repository,
+    # uncomment the line below and change it to the correct folder name:
+    # rootDir: "KeeBo backend"
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false
+        placeholder: "Your MongoDB Connection String"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 30d
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+        placeholder: "Your Cloudinary Cloud Name"
+      - key: CLOUDINARY_API_KEY
+        sync: false
+        placeholder: "Your Cloudinary API Key"
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+        placeholder: "Your Cloudinary API Secret"
+      - key: EMAIL_USER
+        sync: false
+        placeholder: "Your Gmail Address"
+      - key: EMAIL_PASS
+        sync: false
+        placeholder: "Your Gmail App Password"
+      - key: ADMIN_EMAIL
+        sync: false
+        placeholder: "Your Admin Notification Email Address"
