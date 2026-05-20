@@ -97,10 +97,13 @@ const sendContactMessage = async (req, res, next) => {
     const { name, email, subject, message } = req.body;
     const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
 
+    const text = `New KeeBo Support Inquiry\n\nFull Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\nMessage:\n${message}\n\nSubmitted via KeeBo website contact form.`;
+
     // Send email to admin
     await sendEmail({
       to: adminEmail,
-      subject: `[KeeBo Contact Form] ${subject}`,
+      subject: `[KeeBo Contact] ${subject}`,
+      text,
       html: `
         <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; padding: 40px 20px; color: #1f2937;">
           <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb;">
