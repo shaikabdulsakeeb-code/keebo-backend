@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 // Helper to strip HTML tags to generate a clean plain-text alternative
 const stripHtml = (htmlMarkup) => {
@@ -13,6 +14,61 @@ const stripHtml = (htmlMarkup) => {
 const sendEmail = async ({ to, subject, html, text }) => {
   const plainText = text || (html ? stripHtml(html) : '');
   const preferTextOnly = process.env.EMAIL_PREFER_TEXT === 'true';
+
+  // If Brevo API Key is set, send via Brevo HTTP API (perfect for Render, HTTP-based)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER || 'keebo.platform@gmail.com';
+      const senderName = process.env.BREVO_SENDER_NAME || 'KeeBo Support';
+      const replyToEmail = process.env.EMAIL_USER || 'keebo.platform@gmail.com';
+
+      // Log a warning if sending from a Gmail address via Brevo (major SPF/DMARC spam trigger)
+      if (senderEmail.endsWith('@gmail.com')) {
+        console.warn(`[WARNING] Sending via Brevo using a @gmail.com address (${senderEmail}). This will likely fail SPF/DMARC checks and land in spam. Please set BREVO_SENDER_EMAIL to a verified domain email in Brevo.`);
+      }
+
+      const payload = {
+        sender: {
+          name: senderName,
+          email: senderEmail,
+        },
+        to: [{ email: to }],
+        subject: subject,
+        replyTo: {
+          email: replyToEmail,
+          name: senderName,
+        },
+      };
+
+      if (preferTextOnly) {
+        payload.textContent = plainText;
+      } else {
+        if (html) payload.htmlContent = html;
+        if (plainText) payload.textContent = plainText;
+      }
+
+      await axios.post(
+        'https://api.brevo.com/v3/smtp/email',
+        payload,
+        {
+          headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json',
+          },
+          timeout: 10000, // 10 seconds timeout
+        }
+      );
+
+      console.log(`Email successfully sent via Brevo HTTP API to ${to}`);
+      return;
+    } catch (err) {
+      const errMsg = err.response && err.response.data && err.response.data.message 
+        ? err.response.data.message 
+        : err.message;
+      console.warn(`Brevo HTTP dispatch failed (${errMsg}). Falling back to Gmail SMTP...`);
+    }
+  }
 
   // Transporter (Nodemailer + Gmail App Password)
   const transporter = nodemailer.createTransport({
